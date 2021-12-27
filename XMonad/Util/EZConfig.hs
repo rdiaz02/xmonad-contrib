@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Module      :  XMonad.Util.EZConfig
@@ -34,20 +35,23 @@ module XMonad.Util.EZConfig (
 
                              parseKey, -- used by XMonad.Util.Paste
                              parseKeyCombo,
-                             parseKeySequence, readKeySequence
+                             parseKeySequence, readKeySequence,
+#ifdef TESTING
+                             functionKeys, specialKeys, multimediaKeys,
+                             parseModifier,
+#endif
                             ) where
 
 import XMonad
 import XMonad.Actions.Submap
-import XMonad.Prelude hiding (many)
+import XMonad.Prelude
 
 import XMonad.Util.NamedActions
+import XMonad.Util.Parser
 
 import Control.Arrow (first, (&&&))
 import qualified Data.Map as M
 import Data.Ord (comparing)
-
-import Text.ParserCombinators.ReadP
 
 -- $usage
 -- To use this module, first import it into your @~\/.xmonad\/xmonad.hs@:
@@ -181,6 +185,8 @@ removeMouseBindings conf mouseBindingList =
 -- > <Tab>
 -- > <Return>
 -- > <Pause>
+-- > <Num_Lock>
+-- > <Caps_Lock>
 -- > <Scroll_lock>
 -- > <Sys_Req>
 -- > <Print>
@@ -197,6 +203,18 @@ removeMouseBindings conf mouseBindingList =
 -- > <Insert>
 -- > <Break>
 -- > <Space>
+-- > <Control_L>
+-- > <Control_R>
+-- > <Shift_L>
+-- > <Shift_R>
+-- > <Alt_L>
+-- > <Alt_R>
+-- > <Meta_L>
+-- > <Meta_R>
+-- > <Super_L>
+-- > <Super_R>
+-- > <Hyper_L>
+-- > <Hyper_R>
 -- > <F1>-<F24>
 -- > <KP_Space>
 -- > <KP_Tab>
@@ -394,16 +412,15 @@ readKeymap c = mapMaybe (maybeKeys . first (readKeySequence c))
 -- | Parse a sequence of keys, returning Nothing if there is
 --   a parse failure (no parse, or ambiguous parse).
 readKeySequence :: XConfig l -> String -> Maybe [(KeyMask, KeySym)]
-readKeySequence c = listToMaybe . parses
-  where parses = map fst . filter (null.snd) . readP_to_S (parseKeySequence c)
+readKeySequence c = runParser (parseKeySequence c)
 
 -- | Parse a sequence of key combinations separated by spaces, e.g.
 --   @\"M-c x C-S-2\"@ (mod+c, x, ctrl+shift+2).
-parseKeySequence :: XConfig l -> ReadP [(KeyMask, KeySym)]
-parseKeySequence c = sepBy1 (parseKeyCombo c) (many1 $ char ' ')
+parseKeySequence :: XConfig l -> Parser [(KeyMask, KeySym)]
+parseKeySequence c = parseKeyCombo c `sepBy1` many1 (char ' ')
 
 -- | Parse a modifier-key combination such as "M-C-s" (mod+ctrl+s).
-parseKeyCombo :: XConfig l -> ReadP (KeyMask, KeySym)
+parseKeyCombo :: XConfig l -> Parser (KeyMask, KeySym)
 parseKeyCombo c = do mods <- many (parseModifier c)
                      k <- parseKey
                      return (foldl' (.|.) 0 mods, k)
@@ -411,23 +428,23 @@ parseKeyCombo c = do mods <- many (parseModifier c)
 -- | Parse a modifier: either M- (user-defined mod-key),
 --   C- (control), S- (shift), or M#- where # is an integer
 --   from 1 to 5 (mod1Mask through mod5Mask).
-parseModifier :: XConfig l -> ReadP KeyMask
-parseModifier c =  (string "M-" >> return (modMask c))
-               +++ (string "C-" >> return controlMask)
-               +++ (string "S-" >> return shiftMask)
-               +++ do _ <- char 'M'
-                      n <- satisfy (`elem` ['1'..'5'])
-                      _ <- char '-'
-                      return $ indexMod (read [n] - 1)
+parseModifier :: XConfig l -> Parser KeyMask
+parseModifier c = (string "M-" $> modMask c)
+               <> (string "C-" $> controlMask)
+               <> (string "S-" $> shiftMask)
+               <> do _ <- char 'M'
+                     n <- satisfy (`elem` ['1'..'5'])
+                     _ <- char '-'
+                     return $ indexMod (read [n] - 1)
     where indexMod = (!!) [mod1Mask,mod2Mask,mod3Mask,mod4Mask,mod5Mask]
 
 -- | Parse an unmodified basic key, like @\"x\"@, @\"<F1>\"@, etc.
-parseKey :: ReadP KeySym
-parseKey = parseRegular +++ parseSpecial
+parseKey :: Parser KeySym
+parseKey = parseSpecial <> parseRegular
 
 -- | Parse a regular key name (represented by itself).
-parseRegular :: ReadP KeySym
-parseRegular = choice [ char s >> return k
+parseRegular :: Parser KeySym
+parseRegular = choice [ char s $> k
                       | (s,k) <- zip ['!'             .. '~'          ] -- ASCII
                                      [xK_exclam       .. xK_asciitilde]
 
@@ -436,13 +453,11 @@ parseRegular = choice [ char s >> return k
                       ]
 
 -- | Parse a special key name (one enclosed in angle brackets).
-parseSpecial :: ReadP KeySym
-parseSpecial = do _   <- char '<'
-                  key <- choice [ string name >> return k
-                                | (name,k) <- keyNames
-                                ]
-                  _   <- char '>'
-                  return key
+parseSpecial :: Parser KeySym
+parseSpecial = do _ <- char '<'
+                  choice [ k <$ string name <* char '>'
+                         | (name, k) <- keyNames
+                         ]
 
 -- | A list of all special key names and their associated KeySyms.
 keyNames :: [(String, KeySym)]
@@ -460,6 +475,8 @@ specialKeys = [ ("Backspace"  , xK_BackSpace)
               , ("Tab"        , xK_Tab)
               , ("Return"     , xK_Return)
               , ("Pause"      , xK_Pause)
+              , ("Num_Lock"   , xK_Num_Lock)
+              , ("Caps_Lock"  , xK_Caps_Lock)
               , ("Scroll_lock", xK_Scroll_Lock)
               , ("Sys_Req"    , xK_Sys_Req)
               , ("Print"      , xK_Print)
@@ -481,6 +498,18 @@ specialKeys = [ ("Backspace"  , xK_BackSpace)
               , ("Insert"     , xK_Insert)
               , ("Break"      , xK_Break)
               , ("Space"      , xK_space)
+              , ("Control_L"  , xK_Control_L)
+              , ("Control_R"  , xK_Control_R)
+              , ("Shift_L"    , xK_Shift_L)
+              , ("Shift_R"    , xK_Shift_R)
+              , ("Alt_L"      , xK_Alt_L)
+              , ("Alt_R"      , xK_Alt_R)
+              , ("Meta_L"     , xK_Meta_L)
+              , ("Meta_R"     , xK_Meta_R)
+              , ("Super_L"    , xK_Super_L)
+              , ("Super_R"    , xK_Super_R)
+              , ("Hyper_L"    , xK_Hyper_L)
+              , ("Hyper_R"    , xK_Hyper_R)
               , ("KP_Space"   , xK_KP_Space)
               , ("KP_Tab"     , xK_KP_Tab)
               , ("KP_Enter"   , xK_KP_Enter)

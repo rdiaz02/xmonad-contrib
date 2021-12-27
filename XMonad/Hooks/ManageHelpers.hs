@@ -25,11 +25,25 @@
 -- >         ],
 -- >         ...
 -- >     }
+--
+-- Here's how you can define more helpers like the ones from this module:
+--
+-- > -- some function you want to transform into an infix operator
+-- > f :: a -> b -> Bool
+-- >
+-- > -- a new helper
+-- > q ***? x = fmap (\a -> f a x) q   -- or: (\b -> f x b)
+-- > -- or
+-- > q ***? x = fmap (`f` x) q         -- or: (x `f`)
+--
+-- Any existing operator can be "lifted" in the same way:
+--
+-- > q ++? x = fmap (++ x) q
 
 module XMonad.Hooks.ManageHelpers (
     Side(..),
     composeOne,
-    (-?>), (/=?), (<==?), (</=?), (-->>), (-?>>),
+    (-?>), (/=?), (^?), (~?), ($?), (<==?), (</=?), (-->>), (-?>>),
     currentWs,
     windowTag,
     isInProperty,
@@ -95,6 +109,18 @@ infixr 0 -?>, -->>, -?>>
 -- | q \/=? x. if the result of q equals x, return False
 (/=?) :: (Eq a, Functor m) => m a -> a -> m Bool
 q /=? x = fmap (/= x) q
+
+-- | q ^? x. if the result of @x `isPrefixOf` q@, return True
+(^?) :: (Eq a, Functor m) => m [a] -> [a] -> m Bool
+q ^? x = fmap (x `isPrefixOf`) q
+
+-- | q ~? x. if the result of @x `isInfixOf` q@, return True
+(~?) :: (Eq a, Functor m) => m [a] -> [a] -> m Bool
+q ~? x = fmap (x `isInfixOf`) q
+
+-- | q $? x. if the result of @x `isSuffixOf` q@, return True
+($?) :: (Eq a, Functor m) => m [a] -> [a] -> m Bool
+q $? x = fmap (x `isSuffixOf`) q
 
 -- | q <==? x. if the result of q equals x, return True grouped with q
 (<==?) :: (Eq a, Functor m) => m a -> a -> m (Match a)

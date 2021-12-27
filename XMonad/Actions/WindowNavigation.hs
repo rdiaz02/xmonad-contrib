@@ -127,7 +127,7 @@ swap = withTargetWindow swapWithFocused
                 Just currentWin -> W.focusWindow currentWin $
                                    mapWindows (swapWin currentWin targetWin) winSet
                 Nothing -> winSet
-        mapWindows f ss = W.mapWorkspace (mapWindows' f) ss
+        mapWindows f = W.mapWorkspace (mapWindows' f)
         mapWindows' f ws@W.Workspace{ W.stack = s } = ws { W.stack = mapWindows'' f <$> s }
         mapWindows'' f (W.Stack focused up down) = W.Stack (f focused) (map f up) (map f down)
         swapWin win1 win2 win
@@ -209,9 +209,9 @@ inr D (Point px py) (Rectangle rx ry w h) = px >= rx && px < rx + fromIntegral w
                                                         py < ry + fromIntegral h
 inr U (Point px py) (Rectangle rx ry w _) = px >= rx && px < rx + fromIntegral w &&
                                             py >  ry
-inr R (Point px py) (Rectangle rx ry _ h) = px <  rx &&
+inr R (Point px py) (Rectangle rx ry w h) =             px < rx + fromIntegral w &&
                                             py >= ry && py < ry + fromIntegral h
-inr L (Point px py) (Rectangle rx ry w h) =             px > rx + fromIntegral w &&
+inr L (Point px py) (Rectangle rx ry _ h) = px >  rx &&
                                             py >= ry && py < ry + fromIntegral h
 
 sortby :: Direction2D -> [(a,Rectangle)] -> [(a,Rectangle)]

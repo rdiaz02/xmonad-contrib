@@ -616,11 +616,8 @@ actOnScreens act wrap = withWindowSet $ \winset -> do
 
 -- | Determines whether a given window is mapped
 isMapped :: Window -> X Bool
-isMapped win  =  withDisplay
-              $  \dpy -> io
-              $  (waIsUnmapped /=)
-              .  wa_map_state
-             <$> getWindowAttributes dpy win
+isMapped = fmap (maybe False ((waIsUnmapped /=) .  wa_map_state))
+         . safeGetWindowAttributes
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -824,8 +821,7 @@ doSideNavigationWithBias bias dir (cur, rect)
     rHalfPiCC r = SideRect (-y2 r) (-y1 r) (x1 r) (x2 r)
 
     -- Apply the above function until d becomes synonymous with R (wolog).
-    rotateToR d = let (_, _:l) = break (d ==) [U, L, D, R]
-                  in  foldr (const $ (.) rHalfPiCC) id l
+    rotateToR d = fromJust . lookup d . zip [R, D, L, U] . iterate rHalfPiCC
 
     transform = rotateToR dir . translate . toSR
 

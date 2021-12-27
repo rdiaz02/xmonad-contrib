@@ -138,13 +138,12 @@ import           Graphics.X11.Xlib.Extras                (Event(..))
 -- to make it obay the monoid laws
 data Opacity = Opacity Rational | OEmpty
 
+instance Semigroup Opacity where
+  r <> OEmpty = r
+  _ <> r      = r
+
 instance Monoid Opacity where
   mempty                  = OEmpty
-  r      `mappend` OEmpty = r
-  _      `mappend` r      = r
-
-instance Semigroup Opacity where
-  (<>) = mappend
 
 -- | A FadeHook is similar to a ManageHook, but records window opacity.
 type FadeHook = Query Opacity
@@ -172,17 +171,17 @@ opacity :: Rational -- ^ The opacity of a window as a fraction.
 opacity =  doS . Opacity . clampRatio
 
 fadeTo, translucence, fadeBy :: Rational -> FadeHook
--- ^ An alias for 'transparency'.
+-- | An alias for 'transparency'.
 fadeTo       = transparency
--- ^ An alias for 'transparency'.
+-- | An alias for 'transparency'.
 translucence = transparency
--- ^ An alias for 'transparency'.
+-- | An alias for 'opacity'.
 fadeBy       = opacity
 
 invisible, solid :: FadeHook
--- ^ An alias for 'transparent'.
+-- | An alias for 'transparent'.
 invisible    = transparent
--- ^ An alias for 'opaque'.
+-- | An alias for 'opaque'.
 solid        = opaque
 
 -- | Like 'doF', but usable with 'ManageHook'-like hooks that

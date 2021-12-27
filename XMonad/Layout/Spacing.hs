@@ -96,6 +96,10 @@ import           XMonad.Actions.MessageFeedback
 --     every direction.
 --
 --   - @True@: Enable the 'windowBorder'.
+--
+-- __Warning__: If you also use the 'avoidStruts' layout modifier, it
+-- must come /before/ any of these modifiers. See the documentation of
+-- 'avoidStruts' for details.
 
 -- | Represent the borders of a rectangle.
 data Border = Border
@@ -330,8 +334,7 @@ borderIncrementBy i (Border t b r l) =
     let bl = [t,b,r,l]
         o  = maximum bl
         o' = max i $ negate o
-        [t',b',r',l'] = map (+o') bl
-    in  Border t' b' r' l'
+    in  Border (t + o') (b + o') (r + o') (l + o')
 
 -- | Interface to 'XMonad.Util.Rectangle.withBorder'.
 withBorder' :: Border -> Integer -> Rectangle -> Rectangle

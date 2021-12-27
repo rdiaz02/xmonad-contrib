@@ -12,10 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # XXX: temporarily disabled until xmonad 0.17 release
-          # - resolver: lts-12
-          #   ghc: 8.4.4
-          #   yaml: stack.yaml
+          - resolver: lts-12
+            ghc: 8.4.4
+            yaml: stack.yaml
           - resolver: lts-12
             ghc: 8.4.4
             yaml: stack-master.yaml
@@ -25,11 +24,14 @@ jobs:
           - resolver: lts-16
             ghc: 8.8.4
             yaml: stack-master.yaml
-          # - resolver: lts-17
-          #   ghc: 8.10.4
-          #   yaml: stack.yaml
           - resolver: lts-17
             ghc: 8.10.4
+            yaml: stack-master.yaml
+          - resolver: lts-18
+            ghc: 8.10.7
+            yaml: stack.yaml
+          - resolver: lts-18
+            ghc: 8.10.7
             yaml: stack-master.yaml
 
     steps:
@@ -55,7 +57,8 @@ jobs:
             #
 
       - name: Install GHC
-        # use system ghc in stack, don't waste GH Actions cache space
+        # use system ghc (if available) in stack, don't waste GH Actions cache space
+        continue-on-error: true
         run: |
           set -ex
           sudo apt install -y ghc-${{ matrix.ghc }}
@@ -82,6 +85,7 @@ jobs:
           path: |
             ~/.stack/*
             !~/.stack/pantry
+            !~/.stack/programs
           key: stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles(matrix.yaml) }}-${{ hashFiles('*.cabal') }}
           restore-keys: |
             stack-${{ runner.os }}-${{ matrix.resolver }}-${{ steps.cache-date.outputs.date }}-${{ hashFiles(matrix.yaml) }}-

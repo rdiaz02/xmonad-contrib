@@ -1,12 +1,12 @@
 name:               xmonad-contrib
-version:            0.16.999
+version:            0.17.0.9
 -- ^ also update cpp-options: -DXMONAD_CONTRIB_VERSION_*
 
-homepage:           http://xmonad.org/
-synopsis:           Third party extensions for xmonad
+homepage:           https://xmonad.org/
+synopsis:           Community-maintained extensions extensions for xmonad
 description:
-    Third party tiling algorithms, configurations and scripts to xmonad,
-    a tiling window manager for X.
+    Community-maintained tiling algorithms and extension modules for xmonad,
+    an X11 tiling window manager.
     .
     For an introduction to building, configuring and using xmonad
     extensions, see "XMonad.Doc". In particular:
@@ -29,11 +29,11 @@ extra-source-files: README.md CHANGES.md scripts/generate-configs scripts/run-xm
                     scripts/xmonad-clock.c
                     XMonad/Config/dmwit.xmobarrc
                     XMonad/Config/Example.hs
-cabal-version:      >= 1.8
+cabal-version:      1.12
 build-type:         Simple
 bug-reports:        https://github.com/xmonad/xmonad-contrib/issues
 
-tested-with:        GHC == 8.4.4 || == 8.6.5 || == 8.8.4 || == 8.10.4 || == 9.0.1
+tested-with:        GHC == 8.4.4 || == 8.6.5 || == 8.8.4 || == 8.10.4 || == 9.0.1 || == 9.2.1
 
 source-repository head
   type:     git
@@ -49,23 +49,25 @@ flag pedantic
   manual:      True
 
 library
-    build-depends: base >= 4.9 && < 5,
-                   bytestring >= 0.10 && < 0.11,
+    build-depends: base >= 4.11 && < 5,
+                   bytestring >= 0.10 && < 0.12,
                    containers >= 0.5 && < 0.7,
                    directory,
                    filepath,
-                   time >= 1.8 && < 1.12,
+                   time >= 1.8 && < 1.13,
                    process,
                    random,
                    mtl >= 1 && < 3,
                    unix,
                    X11 >= 1.10 && < 1.11,
                    xmonad >= 0.16.99999 && < 0.18,
-                   utf8-string
+                   utf8-string,
+                   deepseq
+    default-language: Haskell2010
 
     cpp-options:   -DXMONAD_CONTRIB_VERSION_MAJOR=0
-                   -DXMONAD_CONTRIB_VERSION_MINOR=16
-                   -DXMONAD_CONTRIB_VERSION_PATCH=999
+                   -DXMONAD_CONTRIB_VERSION_MINOR=17
+                   -DXMONAD_CONTRIB_VERSION_PATCH=0
     ghc-options:   -Wall -Wno-unused-do-bind
 
     if flag(pedantic)
@@ -166,6 +168,7 @@ library
                         XMonad.Doc.Configuring
                         XMonad.Doc.Developing
                         XMonad.Doc.Extending
+                        XMonad.Hooks.BorderPerWindow
                         XMonad.Hooks.CurrentWorkspaceOnTop
                         XMonad.Hooks.DebugEvents
                         XMonad.Hooks.DebugKeyEvents
@@ -213,6 +216,7 @@ library
                         XMonad.Layout.BorderResize
                         XMonad.Layout.BoringWindows
                         XMonad.Layout.ButtonDecoration
+                        XMonad.Layout.CenteredIfSingle
                         XMonad.Layout.CenteredMaster
                         XMonad.Layout.Circle
                         XMonad.Layout.Column
@@ -332,6 +336,7 @@ library
                         XMonad.Prompt.XMonad
                         XMonad.Prompt.Zsh
                         XMonad.Util.ActionCycle
+                        XMonad.Util.ActionQueue
                         XMonad.Util.ClickableWorkspaces
                         XMonad.Util.Cursor
                         XMonad.Util.CustomKeys
@@ -354,6 +359,7 @@ library
                         XMonad.Util.NamedScratchpad
                         XMonad.Util.NamedWindows
                         XMonad.Util.NoTaskbar
+                        XMonad.Util.Parser
                         XMonad.Util.Paste
                         XMonad.Util.PositionStore
                         XMonad.Util.PureX
@@ -382,6 +388,7 @@ test-suite tests
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
   other-modules:  CycleRecentWS
+                  EZConfig
                   ExtensibleConf
                   GridSelect
                   Instances
@@ -398,6 +405,7 @@ test-suite tests
                   XMonad.Actions.GridSelect
                   XMonad.Actions.PhysicalScreens
                   XMonad.Actions.RotateSome
+                  XMonad.Actions.Submap
                   XMonad.Actions.SwapWorkspaces
                   XMonad.Actions.TagWindows
                   XMonad.Actions.WindowBringer
@@ -416,12 +424,15 @@ test-suite tests
                   XMonad.Prompt.Shell
                   XMonad.Util.Dmenu
                   XMonad.Util.Dzen
+                  XMonad.Util.EZConfig
                   XMonad.Util.ExtensibleConf
                   XMonad.Util.ExtensibleState
                   XMonad.Util.Font
                   XMonad.Util.Image
                   XMonad.Util.Invisible
+                  XMonad.Util.NamedActions
                   XMonad.Util.NamedWindows
+                  XMonad.Util.Parser
                   XMonad.Util.PureX
                   XMonad.Util.Rectangle
                   XMonad.Util.Run
@@ -439,16 +450,18 @@ test-suite tests
                , X11 >= 1.10 && < 1.11
                , containers
                , directory
-               , time >= 1.8 && < 1.12
+               , time >= 1.8 && < 1.13
                , hspec >= 2.4.0 && < 3
                , mtl
                , random
                , process
                , unix
                , utf8-string
+               , deepseq
                , xmonad >= 0.16.9999 && < 0.18
   cpp-options: -DTESTING
   ghc-options: -Wall -Wno-unused-do-bind
+  default-language: Haskell2010
 
   if flag(pedantic)
      ghc-options: -Werror -Wwarn=deprecations

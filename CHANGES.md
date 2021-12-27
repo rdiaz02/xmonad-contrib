@@ -4,6 +4,84 @@
 
 ### Breaking Changes
 
+  * `XMonad.Util.EZConfig`
+
+    - The functions `parseKey`, `parseKeyCombo`, and `parseKeySequence`
+      now return a `Parser` (from `XMonad.Util.Parser`) instead of a
+      `ReadP`.
+
+### New Modules
+
+  * `XMonad.Layout.CenteredIfSingle`
+
+    Layout modifier that, if only a single window is on screen, places that window
+    in the middle of the screen.
+
+  * `XMonad.Util.ActionQueue`
+
+    Put XMonad actions in the queue to be executed every time the
+    `logHook` (or, alternatively, a hook of your choice) runs.
+
+  * `XMonad.Hooks.BorderPerWindow`
+
+    While XMonad provides config to set all window borders at the same
+    width, this extension defines and sets border width for each window.
+
+  * `XMonad.Util.Parser`
+
+    A wrapper around the 'ReadP' parser combinator, providing behaviour
+    that's closer to the more popular parser combinator libraries.
+
+### Bug Fixes and Minor Changes
+
+  * `XMonad.Prompt`
+
+    - Added `transposeChars` to interchange the characters around the
+      point and bound it to `C-t` in the Emacs XPKeymaps.
+
+    - Added xft-based font fallback support.  This may be used by
+      appending other fonts to the given string:
+      `xft:iosevka-11,FontAwesome-9`.  Note that this requires
+      `xmonad-contrib` to be compiled with `X11-xft` version 0.3.4 or
+      higher.
+
+  * `XMonad.Hooks.WindowSwallowing`
+
+    - Fixed windows getting lost when used in conjunction with
+      `smartBorders` and a single window.
+
+  * `XMonad.Util.EZConfig`
+
+    - Added support for Modifier Keys `KeySym`s for Emacs-like `additionalKeysP`.
+
+  * `XMonad.Hooks.ManageHelpers`
+
+    - Flipped how `(^?)`, `(~?)`, and `($?)` work to more accurately
+      reflect how one uses these operators.
+
+  * `XMonad.Actions.WindowNavigation`
+
+    -  Fixed navigation getting "stuck" in certain situations for
+       widescreen resolutions.
+
+  * `XMonad.Layout.MagicFocus`
+
+    - The focused window will always be at the master area in the stack being
+      passed onto the modified layout, even when focus leaves the workspace
+      using the modified layout.
+
+  * `XMonad.Actions.TreeSelect`
+
+    - Added xft-based font fallback support.  This may be used by
+      appending other fonts to the given string:
+      `xft:iosevka-11,FontAwesome-9`.  Note that this requires
+      `xmonad-contrib` to be compiled with `X11-xft` version 0.3.4 or
+      higher.
+
+## 0.17.0 (October 27, 2021)
+
+### Breaking Changes
+
   * All modules that export bitmap fonts as their default
 
     - If xmonad is compiled with XFT support (the default), use an XFT
@@ -179,8 +257,13 @@
       `xmobarFont` for selecting an alternative font.
 
     - Added `ppRename` to `PP`, which makes it possible for extensions like
-      `workspaceNamesPP`, `marshallPP` and/or `clickablePP` to compose
-      intuitively.
+      `workspaceNamesPP`, `marshallPP` and/or `clickablePP` (which need to
+      access the original `WorkspaceId`) to compose intuitively.
+
+    - Added `ppPrinters`, `WSPP` and `fallbackPrinters` as a generalization of
+      the `ppCurrent`, `ppVisible`… sextet, which makes it possible for
+      extensions like `copiesPP` (which acts as if there was a
+      `ppHiddenWithCopies`) to compose intuitively.
 
   * `XMonad.Hooks.StatusBar`
 
@@ -495,6 +578,10 @@
     - Restored compatibility with pre-0.13 configs by making the startup hook
       unnecessary for correct functioning (strut cache is initialized on-demand).
 
+      This is a temporary measure, however. The individual hooks are now
+      deprecated in favor of the `docks` combinator, `xmonad --recompile` now
+      reports deprecation warnings, and the hooks will be removed soon.
+
     - Fixed ignoring of strut updates from override-redirect windows, which is
       default for xmobar.
 
@@ -515,6 +602,9 @@
       (using either the `WM_CLIENT_LEADER` or `_NET_WM_PID` property).
 
     - Added `windowTag`
+
+    - Added `(^?)`, `(~?)` and `($?)` operators as infix versions of `isPrefixOf`, `isInfixOf`
+      and `isSuffixOf` working with `ManageHook`s.
 
   * `XMonad.Util.EZConfig`
 

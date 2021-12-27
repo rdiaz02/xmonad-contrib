@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE RecordWildCards #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  XMonad.Actions.CopyWindow
@@ -26,11 +27,12 @@ module XMonad.Actions.CopyWindow (
                                 ) where
 
 import XMonad
+import XMonad.Prelude
 import Control.Arrow ((&&&))
 import qualified Data.List as L
 
 import XMonad.Actions.WindowGo
-import XMonad.Hooks.StatusBar.PP (PP(..))
+import XMonad.Hooks.StatusBar.PP (PP(..), WS(..), isHidden)
 import qualified XMonad.StackSet as W
 
 -- $usage
@@ -93,9 +95,9 @@ import qualified XMonad.StackSet as W
 copiesPP :: (WorkspaceId -> String) -> PP -> X PP
 copiesPP wtoS pp = do
     copies <- wsContainingCopies
-    let check ws | ws `elem` copies = wtoS ws
-                 | otherwise = ppHidden pp ws
-    return pp { ppHidden = check }
+    let check WS{..} = W.tag wsWS `elem` copies
+    let printer = (asks (isHidden <&&> check) >>= guard) $> wtoS
+    return pp{ ppPrinters = printer <|> ppPrinters pp }
 
 -- | Copy the focused window to a workspace.
 copy :: (Eq s, Eq i, Eq a) => i -> W.StackSet i l a s sd -> W.StackSet i l a s sd
@@ -112,10 +114,10 @@ copyWindow w n = copy'
     where copy' s = if n `W.tagMember` s
                     then W.view (W.currentTag s) $ insertUp' w $ W.view n s
                     else s
-          insertUp' a s = W.modify (Just $ W.Stack a [] [])
+          insertUp' a = W.modify (Just $ W.Stack a [] [])
                           (\(W.Stack t l r) -> if a `elem` t:l++r
                                              then Just $ W.Stack t l r
-                                             else Just $ W.Stack a (L.delete a l) (L.delete a (t:r))) s
+                                             else Just $ W.Stack a (L.delete a l) (L.delete a (t:r)))
 
 
 -- | runOrCopy will run the provided shell command unless it can
